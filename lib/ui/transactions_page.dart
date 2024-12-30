@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:money_manager_clone/ui/theme.dart';
 import 'package:money_manager_clone/widgets/daily_tran_list.dart';
 import 'package:money_manager_clone/widgets/header.dart';
 
@@ -39,21 +40,25 @@ class _TransactionPageState extends State<TransactionsPage> {
                             updateParent: refresh,
                         ),
                         
-                        const TabBar(
-                            tabs: [
-                                Tab(
-                                    child: Text("Daily"),
-                                ),
-                                Tab(
-                                    child: Text("Calendar"),
-                                ),
-                                Tab(
-                                    child: Text("Monthly"),
-                                ),
-                                Tab(
-                                    child: Text("Total"),
-                                )
-                            ],
+                        Container(
+                            color: Themes.primaryColor,
+                            height: 30,
+                            child: const TabBar(
+                                tabs: [
+                                    Tab(
+                                        text: "Daily", 
+                                    ),
+                                    Tab(
+                                        text: "Calander",
+                                    ),
+                                    Tab(
+                                        text: "Monthly", 
+                                    ),
+                                    Tab(
+                                        text: "Total", 
+                                    )
+                                ],
+                            ),
                         ),
                         
                         const Row(
@@ -61,22 +66,39 @@ class _TransactionPageState extends State<TransactionsPage> {
                             children: [
                                 Column(
                                     children: [
-                                        Text("Income"),
-                                        Text("0.00"),
+                                        Text(
+                                            "Income",
+                                            style: Themes.amtType,
+                                        ),
+                                        Text("0.00",
+                                            style: Themes.amtIncome
+                                        ),
                                     ],
                                 ),
 
                                 Column(
                                     children: [
-                                        Text("Expenses"),
-                                        Text("0.00"),
+                                        Text(
+                                            "Expenses",
+                                            style: Themes.amtType,
+                                        ),
+                                        Text(
+                                            "0.00",
+                                            style: Themes.amtExpense,
+                                        ),
                                     ],
                                 ),
 
                                 Column(
                                     children: [
-                                        Text("Total"),
-                                        Text("0.00"),
+                                        Text(
+                                            "Total",
+                                            style: Themes.amtType,
+                                        ),
+                                        Text(
+                                            "0.00",
+                                            style: Themes.amtType,
+                                        ),
                                     ],
                                 )
                             ],
