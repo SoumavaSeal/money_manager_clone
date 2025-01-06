@@ -1,29 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:money_manager_clone/models/account_group.dart';
-import 'package:money_manager_clone/models/accounts.dart';
+import 'package:money_manager_clone/models/categories.dart';
 import 'package:money_manager_clone/services/database_services.dart';
 import 'package:money_manager_clone/ui/theme.dart';
 
-class AccountInput extends StatefulWidget {
-  final dynamic updateParentAcctInp;
-  final dynamic updateParentAcct;
+class CategoryInput extends StatefulWidget {
+  final dynamic updateParentCattInp;
+  final dynamic updateParentCat;
+  final int curTrxnType;
 
-  const AccountInput(
+  const CategoryInput(
       {super.key,
-      required this.updateParentAcctInp,
-      required this.updateParentAcct});
+      required this.updateParentCattInp,
+      required this.updateParentCat,
+      required this.curTrxnType});
 
   @override
-  State<AccountInput> createState() => _AccountInputState();
+  State<CategoryInput> createState() => _CategoryInputState();
 }
 
-class _AccountInputState extends State<AccountInput> {
-  int curAccGrp = 0;
+class _CategoryInputState extends State<CategoryInput> {
+  int curCat = 0;
 
   @override
   void initState() {
-    curAccGrp = 1;
+    curCat = 1;
     super.initState();
   }
 
@@ -34,19 +35,18 @@ class _AccountInputState extends State<AccountInput> {
     Size size = MediaQuery.of(context).size;
 
     return FutureBuilder(
-        future: Future.wait([
-          dbServices.getAccountGrp(), // Get all Account Group Details
-          dbServices.getAccount(), // Get all Account Details
-        ]),
-        builder: (context, AsyncSnapshot<List<dynamic>> snapshot) {
-          List<Account> accList = []; // All Account Details
-          List<Account> selAcc = []; // Selected Account Details
-          List<AccountGroup> accGrp = []; // All AccountGroup Details
+        future: dbServices.getCategories(), // Get all Categories Details
+        builder: (context, snapshot) {
+          List<Categories> catList = [];
+          List<Categories> subCatList = [];
 
           if (snapshot.hasData) {
-            accList = snapshot.data![1]; // All Account Details
-            accGrp = snapshot.data![0]; // All AccountGroup Details
-            selAcc = accList.where((e) => e.accountGroup == curAccGrp).toList();
+            catList = snapshot.data!
+                .where((e) => e.parentId == 0 && e.type == widget.curTrxnType)
+                .toList();
+            subCatList =
+                snapshot.data!.where((e) => e.parentId == curCat).toList();
+            ;
           }
 
           return Column(
@@ -60,7 +60,7 @@ class _AccountInputState extends State<AccountInput> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     const Text(
-                      "Account",
+                      "Category",
                       style: TextStyle(fontSize: 14, color: Colors.white),
                     ),
                     IconButton(
@@ -70,7 +70,7 @@ class _AccountInputState extends State<AccountInput> {
                           color: Themes.secondaryTextColor,
                         ),
                         onPressed: () {
-                          widget.updateParentAcctInp(false);
+                          widget.updateParentCattInp(false);
                         })
                   ],
                 ),
@@ -82,13 +82,17 @@ class _AccountInputState extends State<AccountInput> {
                     height: size.height * 0.3,
                     width: size.width * 0.5,
                     child: ListView.builder(
-                      itemCount: accGrp.length,
+                      itemCount: catList.length,
                       itemBuilder: (context, index) {
                         return GestureDetector(
                           onTap: () {
                             setState(() {
-                              curAccGrp = index + 1;
+                              curCat = catList[index].id;
                             });
+                          },
+                          onDoubleTap: () {
+                            widget.updateParentCat(catList[index]);
+                            widget.updateParentCattInp(false);
                           },
                           child: Container(
                             height: size.height * 0.3 / 5,
@@ -102,7 +106,7 @@ class _AccountInputState extends State<AccountInput> {
                             )),
                             padding: const EdgeInsets.all(10),
                             child: Text(
-                              accGrp[index].name,
+                              catList[index].description,
                               style: const TextStyle(fontSize: 14),
                             ),
                           ),
@@ -114,12 +118,12 @@ class _AccountInputState extends State<AccountInput> {
                     height: size.height * 0.3,
                     width: size.width * 0.5,
                     child: ListView.builder(
-                      itemCount: selAcc.length,
+                      itemCount: subCatList.length,
                       itemBuilder: (context, index) {
                         return GestureDetector(
                           onTap: () {
-                            widget.updateParentAcct(selAcc[index]);
-                            widget.updateParentAcctInp(false);
+                            widget.updateParentCat(subCatList[index]);
+                            widget.updateParentCattInp(false);
                           },
                           child: Container(
                             height: size.height * 0.3 / 5,
@@ -133,7 +137,7 @@ class _AccountInputState extends State<AccountInput> {
                                   BorderSide(color: Colors.black, width: 0.5),
                             )),
                             child: Text(
-                              selAcc[index].name,
+                              subCatList[index].description,
                               style: const TextStyle(fontSize: 14),
                             ),
                           ),

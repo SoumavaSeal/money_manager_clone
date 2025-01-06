@@ -10,30 +10,68 @@ import 'package:money_manager_clone/widgets/account_input.dart';
 import 'package:intl/intl.dart';
 import 'package:money_manager_clone/widgets/category_input.dart';
 
-class AddTransaction extends StatefulWidget {
-  const AddTransaction({super.key});
+class UpdateTransactions extends StatefulWidget {
+  final Transactions tran;
+  final Account acc;
+  final Account subAcc;
+  final Categories cat;
+
+  const UpdateTransactions(
+      {super.key,
+      required this.tran,
+      required this.acc,
+      required this.subAcc,
+      required this.cat});
 
   @override
-  State<AddTransaction> createState() => _AddTransactionState();
+  State<UpdateTransactions> createState() => _UpdateTransactionsState();
 }
 
-class _AddTransactionState extends State<AddTransaction> {
+class _UpdateTransactionsState extends State<UpdateTransactions> {
+  // DB instance
+  final DatabaseServices dbservice = DatabaseServices.dbInstance;
+
+  // Initial Defualt Values
+
   // Transaction type --> { 0 : "Income", 1 : "Expense", 2 : "Transfer" }
   int curTrxnType = 1;
-  bool isAmtInp = false;
-  bool isAcctInp = false;
-  bool isSubAcctInp = false;
-  bool isCatInp = false;
-
-  double amt = 0.00;
-  String category = "";
-  String note = "";
   Account selAcc = Account.blankAcc;
   Account selSubAcc = Account.blankAcc;
   Categories selCat = Categories.blankCat;
   DateTime curDate = DateTime.now();
 
-  final DatabaseServices dbservice = DatabaseServices.dbInstance;
+  // Input Boxes indicators
+  bool isAcctInp = false;
+  bool isSubAcctInp = false;
+  bool isCatInp = false;
+
+  // Text Controllers
+  final amtController = TextEditingController();
+  final noteController = TextEditingController();
+
+  // Account and Category list
+  List<Account> accList = [];
+  List<Categories> catList = [];
+
+  @override
+  void initState() {
+    curTrxnType = widget.tran.type;
+    curDate = widget.tran.date;
+    amtController.text = "₹ ${widget.tran.amount}";
+    noteController.text = widget.tran.note;
+    selAcc = widget.acc;
+    selSubAcc = widget.subAcc;
+    selCat = widget.cat;
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    amtController.dispose();
+    noteController.dispose();
+    super.dispose();
+  }
 
   void refreshAcctInp(bool accountInput) {
     setState(() {
@@ -283,15 +321,13 @@ class _AddTransactionState extends State<AddTransaction> {
                         fit: FlexFit.tight,
                         flex: 7,
                         child: TextField(
+                          controller: amtController,
                           keyboardType: TextInputType.number,
                           decoration: const InputDecoration(
                               isCollapsed: true,
                               contentPadding: EdgeInsets.all(5)),
                           textAlignVertical: TextAlignVertical.center,
                           style: const TextStyle(fontSize: 12, height: 1.0),
-                          onChanged: (value) {
-                            amt = double.parse(value);
-                          },
                           onTapOutside: (event) {
                             FocusManager.instance.primaryFocus?.unfocus();
                           },
@@ -364,7 +400,6 @@ class _AddTransactionState extends State<AddTransaction> {
                               child: Text(selAcc.name),
                               onTap: () {
                                 setState(() {
-                                  isAmtInp = false;
                                   isCatInp = false;
                                   isAcctInp = true;
                                 });
@@ -401,7 +436,6 @@ class _AddTransactionState extends State<AddTransaction> {
                                     child: Text(selSubAcc.name),
                                     onTap: () {
                                       setState(() {
-                                        isAmtInp = false;
                                         isCatInp = false;
                                         isAcctInp = false;
                                         isSubAcctInp = true;
@@ -430,14 +464,12 @@ class _AddTransactionState extends State<AddTransaction> {
                         fit: FlexFit.tight,
                         flex: 7,
                         child: TextField(
+                          controller: noteController,
                           decoration: const InputDecoration(
                               isCollapsed: true,
                               contentPadding: EdgeInsets.all(5)),
                           textAlignVertical: TextAlignVertical.center,
                           style: const TextStyle(fontSize: 12, height: 1.0),
-                          onSubmitted: (value) {
-                            note = value;
-                          },
                           onTapOutside: (event) {
                             FocusManager.instance.primaryFocus?.unfocus();
                           },
@@ -447,32 +479,91 @@ class _AddTransactionState extends State<AddTransaction> {
                   ),
                 ),
 
-                // Save Button
+                // Update Button
                 Container(
                   margin: const EdgeInsets.only(top: 30),
                   width: size.width * 0.9,
                   child: ElevatedButton(
-                      child: const Text("Save"),
+                      child: const Text("Update"),
                       onPressed: () {
-                        var trxn = Transactions(0, amt, curDate, curTrxnType,
-                            selCat.id, selAcc.id, selSubAcc.id, note, "");
+                        var trxn = Transactions(
+                            widget.tran.id,
+                            double.parse(amtController.text.substring(2)),
+                            curDate,
+                            curTrxnType,
+                            selCat.id,
+                            selAcc.id,
+                            selSubAcc.id,
+                            noteController.text,
+                            "");
 
-                        double newAmt = selAcc.amount;
+                        Map<String, Object?> values = {
+                          'amount': trxn.amount,
+                          'date': trxn.date.toIso8601String(),
+                          'type': trxn.type,
+                          'categoryId': trxn.categoryId,
+                          'accountId': trxn.accountId,
+                          'toAccountId': trxn.toAccountID,
+                          'note': trxn.note,
+                          'description': trxn.description
+                        };
 
-                        if (curTrxnType == 0) {
-                          newAmt += amt;
-                        } else if (curTrxnType == 1) {
-                          newAmt -= amt;
-                        } else if (curTrxnType == 2) {
-                          newAmt -= amt;
-                          double newSubAccAmt = selSubAcc.amount + amt;
+                        dbservice.updateData(
+                            dbservice.trxnTable, trxn.id.toString(), values);
+
+                        double newAccAmt = 0.00;
+                        double newSubAccAmt = 0.00;
+
+                        // Removing old trxn amount record from Account table
+                        if (widget.tran.type == 0) {
+                          newAccAmt = widget.acc.amount - trxn.amount;
+                        } else if (widget.tran.type == 1) {
+                          newAccAmt = widget.acc.amount + trxn.amount;
+                        } else if (widget.tran.type == 2) {
+                          newAccAmt = widget.acc.amount + trxn.amount;
+                          newSubAccAmt = widget.subAcc.amount - trxn.amount;
+
+                          dbservice.updateAccountData(
+                              "amount",
+                              newSubAccAmt.toString(),
+                              widget.subAcc.id.toString());
+                        }
+
+                        dbservice.updateAccountData("amount",
+                            newAccAmt.toString(), widget.acc.id.toString());
+
+                        double temp = newAccAmt;
+
+                        if (selAcc.id == widget.subAcc.id) {
+                          newAccAmt = newSubAccAmt;
+                        } else if (selAcc.id != widget.acc.id) {
+                          newAccAmt = selAcc.amount;
+                        }
+
+                        if (selSubAcc.id == widget.acc.id) {
+                          newSubAccAmt = temp;
+                        } else if (selSubAcc.id != widget.subAcc.id) {
+                          newSubAccAmt = selSubAcc.amount;
+                        }
+
+                        // Adding new trxn amount record from Account table
+                        if (trxn.type == 0) {
+                          newAccAmt = newAccAmt + trxn.amount;
+                        } else if (trxn.type == 1) {
+                          newAccAmt = (newAccAmt - trxn.amount);
+                        } else if (trxn.type == 2) {
+                          newAccAmt = newAccAmt - trxn.amount;
+                          newSubAccAmt = newSubAccAmt + trxn.amount;
+
                           dbservice.updateAccountData("amount",
                               newSubAccAmt.toString(), selSubAcc.id.toString());
                         }
 
-                        dbservice.addTransaction(trxn);
-                        dbservice.updateAccountData(
-                            "amount", newAmt.toString(), selAcc.id.toString());
+                        print(
+                            "after add --> acc=$newAccAmt and subacc = $newSubAccAmt");
+
+                        dbservice.updateAccountData("amount",
+                            newAccAmt.toString(), selAcc.id.toString());
 
                         Navigator.pop(context);
                         Navigator.push(
@@ -488,49 +579,27 @@ class _AddTransactionState extends State<AddTransaction> {
             // Account Input
             SizedBox(
               child: (isAcctInp)
-                  ? TapRegion(
-                      onTapOutside: (tap) {
-                        setState(() {
-                          isAcctInp = false;
-                        });
-                      },
-                      child: AccountInput(
-                          updateParentAcctInp: refreshAcctInp,
-                          updateParentAcct: refreshAcc),
-                    )
+                  ? AccountInput(
+                      updateParentAcctInp: refreshAcctInp,
+                      updateParentAcct: refreshAcc)
                   : null,
             ),
 
-            // Sec Acc Input
             SizedBox(
               child: (isSubAcctInp)
-                  ? TapRegion(
-                      onTapOutside: (tap) {
-                        setState(() {
-                          isSubAcctInp = false;
-                        });
-                      },
-                      child: AccountInput(
-                          updateParentAcctInp: refreshSubAcctInp,
-                          updateParentAcct: refreshSubAcc),
-                    )
+                  ? AccountInput(
+                      updateParentAcctInp: refreshSubAcctInp,
+                      updateParentAcct: refreshSubAcc)
                   : null,
             ),
 
             // Category Input
             SizedBox(
               child: (isCatInp)
-                  ? TapRegion(
-                      onTapOutside: (tap) {
-                        setState(() {
-                          isCatInp = false;
-                        });
-                      },
-                      child: CategoryInput(
-                          updateParentCattInp: refreshCatInp,
-                          updateParentCat: refreshCat,
-                          curTrxnType: curTrxnType),
-                    )
+                  ? CategoryInput(
+                      updateParentCattInp: refreshCatInp,
+                      updateParentCat: refreshCat,
+                      curTrxnType: curTrxnType)
                   : null,
             ),
           ])),
