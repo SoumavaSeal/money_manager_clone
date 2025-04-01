@@ -4,6 +4,7 @@ import 'package:money_manager_clone/models/account_group.dart';
 import 'package:money_manager_clone/models/accounts.dart';
 import 'package:money_manager_clone/models/transaction.dart';
 import 'package:money_manager_clone/services/database_services.dart';
+import 'package:money_manager_clone/ui/account_detail.dart';
 import 'package:money_manager_clone/ui/add_account.dart';
 import 'package:money_manager_clone/ui/theme.dart';
 
@@ -184,13 +185,19 @@ class AccountsPage extends StatelessWidget {
                                       Border(bottom: BorderSide(width: 0.1))),
                               padding: const EdgeInsets.symmetric(
                                   horizontal: 10, vertical: 5),
-                              child: Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(keys[i].name),
-                                  Text(keys[i].amount.toString()),
-                                ],
+                              child: GestureDetector(
+                                onTap: () => Navigator.of(context).push(
+                                    MaterialPageRoute(
+                                        builder: (context) =>
+                                            AccountDetail(acc: keys[i]))),
+                                child: Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(keys[i].name),
+                                    Text(keys[i].amount.toString()),
+                                  ],
+                                ),
                               ),
                             )
                         ]);

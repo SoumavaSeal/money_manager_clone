@@ -5,9 +5,8 @@ import 'package:money_manager_clone/ui/theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Themes.primaryColor
-  ));
+  SystemChrome.setSystemUIOverlayStyle(
+      const SystemUiOverlayStyle(statusBarColor: Themes.primaryColor));
   runApp(const MyApp());
 }
 
@@ -22,8 +21,9 @@ class MyApp extends StatelessWidget {
       title: 'Money Manager',
       theme: Themes().lightTheme,
       home: Container(
-        child: const HomePage(initialIndex: 0,)
-      ),
+          child: const HomePage(
+        initialIndex: 0,
+      )),
     );
   }
 }

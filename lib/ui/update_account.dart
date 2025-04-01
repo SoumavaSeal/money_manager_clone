@@ -1,47 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:money_manager_clone/models/accounts.dart';
+import 'package:money_manager_clone/models/transaction.dart';
 import 'package:money_manager_clone/services/database_services.dart';
 import 'package:money_manager_clone/ui/home_page.dart';
 import 'package:money_manager_clone/ui/theme.dart';
-import 'package:money_manager_clone/widgets/amount_input.dart';
 
-class AddAccount extends StatefulWidget {
-  const AddAccount({super.key});
+class UpdateAccount extends StatefulWidget {
+  final Account acc;
+  const UpdateAccount({super.key, required this.acc});
 
   @override
-  State<AddAccount> createState() => _AddAccountState();
+  State<UpdateAccount> createState() => _UpdateAccountState();
 }
 
-class _AddAccountState extends State<AddAccount> {
+class _UpdateAccountState extends State<UpdateAccount> {
   // Database Services
   final DatabaseServices _dbServices = DatabaseServices.dbInstance;
 
   int curgrp = 0;
-  String amt = "";
-  String accountName = "";
-  String description = "";
-  bool isAmtInp = false;
+
+  // Text Controllers
+  final TextEditingController amtController = TextEditingController();
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController descController = TextEditingController();
 
   @override
   void initState() {
-    curgrp = 0;
-    amt = "₹ 0.00";
-
+    curgrp = widget.acc.accountGroup - 1;
+    nameController.text = widget.acc.name;
+    amtController.text = widget.acc.amount.toString();
+    descController.text = widget.acc.description;
     super.initState();
   }
 
-  void refreshAmt(String amount) {
-    setState(() {
-      amt = amount;
-    });
-  }
+  // void refreshAmt(String amount) {
+  //   setState(() {
+  //     amt = amount;
+  //   });
+  // }
 
-  void refreshAmtInp(bool amountInput) {
-    setState(() {
-      isAmtInp = amountInput;
-    });
-  }
+  // void refreshAmtInp(bool amountInput) {
+  //   setState(() {
+  //     isAmtInp = amountInput;
+  //   });
+  // }
 
   @override
   build(BuildContext context) {
@@ -196,13 +199,15 @@ class _AddAccountState extends State<AddAccount> {
                   fit: FlexFit.tight,
                   flex: 7,
                   child: TextField(
-                      decoration: const InputDecoration(
-                          isCollapsed: true, contentPadding: EdgeInsets.all(5)),
-                      textAlignVertical: TextAlignVertical.center,
-                      style: const TextStyle(fontSize: 12, height: 1.0),
-                      onSubmitted: (value) {
-                        accountName = value;
-                      }),
+                    controller: nameController,
+                    decoration: const InputDecoration(
+                        isCollapsed: true, contentPadding: EdgeInsets.all(5)),
+                    textAlignVertical: TextAlignVertical.center,
+                    style: const TextStyle(fontSize: 12, height: 1.0),
+                    onTapOutside: (event) {
+                      FocusManager.instance.primaryFocus?.unfocus();
+                    },
+                  ),
                 ),
               ],
             ),
@@ -227,12 +232,16 @@ class _AddAccountState extends State<AddAccount> {
                           border: Border(
                               bottom: BorderSide(
                                   color: Themes.secondaryTextColor))),
-                      child: GestureDetector(
-                        child: Text(amt),
-                        onTap: () {
-                          setState(() {
-                            isAmtInp = true;
-                          });
+                      child: TextField(
+                        controller: amtController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                            isCollapsed: true,
+                            contentPadding: EdgeInsets.all(5)),
+                        textAlignVertical: TextAlignVertical.center,
+                        style: const TextStyle(fontSize: 12, height: 1.0),
+                        onTapOutside: (event) {
+                          FocusManager.instance.primaryFocus?.unfocus();
                         },
                       ),
                     )),
@@ -260,18 +269,18 @@ class _AddAccountState extends State<AddAccount> {
                   fit: FlexFit.tight,
                   flex: 9,
                   child: TextField(
-                      decoration: const InputDecoration(
-                          isCollapsed: true,
-                          contentPadding: EdgeInsets.all(5),
-                          border: UnderlineInputBorder(
-                              borderSide: BorderSide(
-                                  width: 0.3,
-                                  color: Themes.secondaryTextColor))),
-                      textAlignVertical: TextAlignVertical.center,
-                      style: const TextStyle(fontSize: 12, height: 1.0),
-                      onSubmitted: (value) {
-                        description = value;
-                      }),
+                    controller: descController,
+                    decoration: const InputDecoration(
+                        isCollapsed: true,
+                        contentPadding: EdgeInsets.all(5),
+                        border: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                                width: 0.3, color: Themes.secondaryTextColor))),
+                    textAlignVertical: TextAlignVertical.center,
+                    style: const TextStyle(fontSize: 12, height: 1.0),
+                    onTapOutside: (size) =>
+                        FocusManager.instance.primaryFocus?.unfocus(),
+                  ),
                 ),
               ],
             ),
@@ -281,16 +290,38 @@ class _AddAccountState extends State<AddAccount> {
             margin: const EdgeInsets.only(top: 30),
             width: size.width * 0.9,
             child: ElevatedButton(
-                child: const Text("Save"),
+                child: const Text("Update"),
                 onPressed: () {
                   var acc = Account(
-                      id: 0,
-                      name: accountName,
+                      id: widget.acc.id,
+                      name: nameController.text,
                       accountGroup: curgrp + 1,
-                      initialAmt: double.parse(amt.substring(2)),
-                      amount: double.parse(amt.substring(2)),
-                      description: description);
-                  _dbServices.addAccount(acc);
+                      initialAmt: widget.acc.initialAmt,
+                      amount: double.parse(amtController.text),
+                      description: descController.text);
+
+                  Map<String, Object?> values = {
+                    'name': acc.name,
+                    'acc_grp': acc.accountGroup,
+                    'initial_amt': acc.initialAmt,
+                    'amount': acc.amount,
+                    'description': acc.description
+                  };
+
+                  var diffAmt =
+                      double.parse(amtController.text) - widget.acc.amount;
+
+                  var type = (diffAmt < 0) ? 1 : 0;
+
+                  if (diffAmt != 0) {
+                    Transactions trxn = Transactions(0, diffAmt, DateTime.now(),
+                        type, 0, widget.acc.id, 0, "Modified", "");
+                    _dbServices.addTransaction(trxn);
+                  }
+
+                  _dbServices.updateData(
+                      _dbServices.accountsTable, acc.id.toString(), values);
+
                   Navigator.of(context).push(MaterialPageRoute(
                       builder: (context) => const HomePage(
                             initialIndex: 2,
@@ -298,15 +329,6 @@ class _AddAccountState extends State<AddAccount> {
                 }),
           ),
         ]),
-        SizedBox(
-          child: (isAmtInp)
-              ? AmountInput(
-                  updateParentAmt: refreshAmt,
-                  updateParentAmtInp: refreshAmtInp,
-                  amt: amt,
-                )
-              : null,
-        ),
       ],
     )));
   }

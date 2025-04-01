@@ -2,16 +2,47 @@ class Account {
   int id;
   String name;
   int accountGroup;
+  double initialAmt = 0.0;
   double amount = 0.0;
   String description;
 
-  Account(this.id, this.name, this.accountGroup, this.amount, this.description);
+  Account(
+      {required this.id,
+      required this.name,
+      required this.accountGroup,
+      required this.initialAmt,
+      required this.amount,
+      required this.description});
 
-  static Account blankAcc = Account(0, "", 0, 0.0, "");
+  static Account blankAcc = Account(
+      id: 0,
+      name: "",
+      accountGroup: 0,
+      initialAmt: 0.0,
+      amount: 0.0,
+      description: "");
 
   static List<Account> initialAccounts = [
-    Account(1, "Wallet", 1, 0.0, ""),
-    Account(2, "S/B Account - 1", 2, 0.0, ""),
-    Account(3, "Credit Card - 1", 3, 0.0, ""),
+    Account(
+        id: 1,
+        name: "Wallet",
+        accountGroup: 1,
+        initialAmt: 0.0,
+        amount: 0.0,
+        description: ""),
+    Account(
+        id: 2,
+        name: "S/B Account - 1",
+        accountGroup: 2,
+        initialAmt: 0.0,
+        amount: 0.0,
+        description: ""),
+    Account(
+        id: 3,
+        name: "Credit Card - 1",
+        accountGroup: 3,
+        initialAmt: 0.0,
+        amount: 0.0,
+        description: "")
   ];
 }

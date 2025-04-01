@@ -65,6 +65,7 @@ class DatabaseServices {
                         id INTEGER PRIMARY KEY,
                         name TEXT NOT NULL,
                         acc_grp INTEGER NOT NULL,
+                        initial_amt REAL NOT NULL,
                         amount REAL NOT NULL,
                         description TEXT
                     )
@@ -91,6 +92,7 @@ class DatabaseServices {
         db.insert(accountsTable, {
           "name": acc.name,
           "acc_grp": acc.accountGroup,
+          "initial_amt": acc.initialAmt,
           "amount": acc.amount,
           "description": acc.description
         });
@@ -114,6 +116,7 @@ class DatabaseServices {
     await db.insert(accountsTable, {
       "name": acc.name,
       "acc_grp": acc.accountGroup,
+      "initial_amt": acc.initialAmt,
       "amount": acc.amount,
       "description": acc.description
     });
@@ -145,11 +148,12 @@ class DatabaseServices {
 
     List<Account> acc = data
         .map((e) => Account(
-            e["id"] as int,
-            e["name"] as String,
-            e["acc_grp"] as int,
-            e["amount"] as double,
-            e["description"] as String))
+            id: e["id"] as int,
+            name: e["name"] as String,
+            accountGroup: e["acc_grp"] as int,
+            initialAmt: e["initial_amt"] as double,
+            amount: e["amount"] as double,
+            description: e["description"] as String))
         .toList();
 
     return acc;
@@ -209,7 +213,7 @@ class DatabaseServices {
   void updateData(
       String tableName, String id, Map<String, Object?> value) async {
     final db = await database;
-
+    print(id);
     db.update(tableName, value, where: 'id = ?', whereArgs: [id]);
   }
 }
