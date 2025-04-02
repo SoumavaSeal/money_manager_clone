@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:money_manager_clone/models/account_group.dart';
 import 'package:money_manager_clone/models/accounts.dart';
-import 'package:money_manager_clone/models/transaction.dart';
 import 'package:money_manager_clone/services/database_services.dart';
 import 'package:money_manager_clone/ui/account_detail.dart';
 import 'package:money_manager_clone/ui/add_account.dart';
@@ -148,9 +147,9 @@ class AccountsPage extends StatelessWidget {
                 // Accounts
                 Expanded(
                   child: ListView.builder(
-                    itemCount:
-                        (snapshot.hasData) ? snapshot.data![0].length : 0,
+                    itemCount: accGrp.length,
                     itemBuilder: (context, index) {
+                      print(accGrp.length);
                       double sumAcctGrp = 0;
                       List<Account> keys = accList
                           .where((key) => key.accountGroup == accGrp[index].id)
@@ -202,7 +201,7 @@ class AccountsPage extends StatelessWidget {
                             )
                         ]);
                       } else {
-                        return null;
+                        return Container();
                       }
                     },
                   ),
