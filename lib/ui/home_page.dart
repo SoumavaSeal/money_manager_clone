@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:money_manager_clone/ui/accounts_page.dart';
 import 'package:money_manager_clone/ui/add_transaction.dart';
+import 'package:money_manager_clone/ui/statPage.dart';
 import 'package:money_manager_clone/ui/transactions_page.dart';
 
 class HomePage extends StatefulWidget {
@@ -17,7 +18,7 @@ class _HomePageState extends State<HomePage> {
 
   List<Widget> widgetList = [
     TransactionsPage(date: DateTime.now()),
-    const Center(child: Text("StatPage")),
+    const StatPage(),
     const AccountsPage(),
     const Center(child: Text("MorePage")),
   ];

@@ -559,9 +559,6 @@ class _UpdateTransactionsState extends State<UpdateTransactions> {
                               newSubAccAmt.toString(), selSubAcc.id.toString());
                         }
 
-                        print(
-                            "after add --> acc=$newAccAmt and subacc = $newSubAccAmt");
-
                         dbservice.updateAccountData("amount",
                             newAccAmt.toString(), selAcc.id.toString());
 

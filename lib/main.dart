@@ -5,8 +5,9 @@ import 'package:money_manager_clone/ui/theme.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(statusBarColor: Themes.primaryColor));
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+      // statusBarColor: Colors.transparent
+      statusBarColor: Themes.primaryColor));
   runApp(const MyApp());
 }
 
