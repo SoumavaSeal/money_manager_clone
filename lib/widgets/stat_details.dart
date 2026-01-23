@@ -33,6 +33,10 @@ class StatDetails extends StatelessWidget {
             Colors.green
           ];
 
+          if (snapshot.hasData == false) {
+            return const CircularProgressIndicator();
+          }
+
           if (snapshot.hasData == true) {
             cat = snapshot.data!.toList();
           }
@@ -92,7 +96,7 @@ class StatDetails extends StatelessWidget {
                                       const EdgeInsets.symmetric(horizontal: 5),
                                   color: colors[index],
                                   child: Text(
-                                    '${(dat[(dat.keys).elementAt(index)] !* 100 / totalAmount).round()}%',
+                                    '${(dat[(dat.keys).elementAt(index)]! * 100 / totalAmount).round()}%',
                                     style: const TextStyle(color: Colors.white),
                                   ),
                                 ),
@@ -100,7 +104,8 @@ class StatDetails extends StatelessWidget {
                                   width: 10,
                                 ),
                                 Text(cat
-                                    .where((c) => c.id == (dat.keys).elementAt(index))
+                                    .where((c) =>
+                                        c.id == (dat.keys).elementAt(index))
                                     .first
                                     .description),
                               ],
