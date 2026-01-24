@@ -14,9 +14,9 @@ class StatDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     Map<int, double> dat = {};
 
-    for (Transactions d in data) {
-      dat[d.categoryId] = (dat[d.categoryId] ?? 0) + d.amount;
-    }
+    // for (Transactions d in data) {
+    //   dat[d.categoryId] = (dat[d.categoryId] ?? 0) + d.amount;
+    // }
 
     DatabaseServices dbservices = DatabaseServices.dbInstance;
 
@@ -39,6 +39,12 @@ class StatDetails extends StatelessWidget {
 
           if (snapshot.hasData == true) {
             cat = snapshot.data!.toList();
+
+            for (Transactions d in data) {
+              int catID = d.categoryId;
+              int parentID = cat.where((c) => c.id == catID).first.parentId;
+              dat[parentID] = (dat[parentID] ?? 0) + d.amount;
+            }
           }
 
           return Column(
