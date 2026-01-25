@@ -149,7 +149,6 @@ class AccountsPage extends StatelessWidget {
                   child: ListView.builder(
                     itemCount: accGrp.length,
                     itemBuilder: (context, index) {
-                      print(accGrp.length);
                       double sumAcctGrp = 0;
                       List<Account> keys = accList
                           .where((key) => key.accountGroup == accGrp[index].id)

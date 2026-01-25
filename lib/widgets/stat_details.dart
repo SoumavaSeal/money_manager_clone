@@ -3,6 +3,7 @@ import 'package:fl_chart/fl_chart.dart';
 import 'package:money_manager_clone/models/categories.dart';
 import 'package:money_manager_clone/models/transaction.dart';
 import 'package:money_manager_clone/services/database_services.dart';
+import 'package:money_manager_clone/ui/stat_details_page.dart';
 
 class StatDetails extends StatelessWidget {
   final List<Transactions> data;
@@ -38,6 +39,7 @@ class StatDetails extends StatelessWidget {
           }
 
           if (snapshot.hasData == true) {
+            dat = {};
             cat = snapshot.data!.toList();
 
             for (Transactions d in data) {
@@ -84,44 +86,57 @@ class StatDetails extends StatelessWidget {
               const SizedBox(height: 15),
               Expanded(
                 child: ListView.builder(
-                  itemBuilder: ((context, index) => Container(
-                        // height: 25,
+                  itemBuilder: ((context, index) => GestureDetector(
+                        onTap: () =>
+                            Navigator.of(context).push(MaterialPageRoute(
+                                builder: (context) => StatDetailsPage(
+                                      data: data,
+                                      selectedNode: cat
+                                          .where((c) =>
+                                              c.id == dat.keys.elementAt(index))
+                                          .first,
+                                      allCategories: cat,
+                                    ))),
+                        child: Container(
+                          // height: 25,
 
-                        decoration: const BoxDecoration(
-                          border: Border(
-                              bottom:
-                                  BorderSide(width: 0.5, color: Colors.grey)),
-                          // color: Colors.white
-                        ),
-                        padding: const EdgeInsets.symmetric(
-                            vertical: 10, horizontal: 15),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Row(
-                              children: [
-                                Container(
-                                  padding:
-                                      const EdgeInsets.symmetric(horizontal: 5),
-                                  color: colors[index],
-                                  child: Text(
-                                    '${(dat[(dat.keys).elementAt(index)]! * 100 / totalAmount).round()}%',
-                                    style: const TextStyle(color: Colors.white),
+                          decoration: const BoxDecoration(
+                            border: Border(
+                                bottom:
+                                    BorderSide(width: 0.5, color: Colors.grey)),
+                            // color: Colors.white
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 10, horizontal: 15),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Row(
+                                children: [
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                        horizontal: 5),
+                                    color: colors[index],
+                                    child: Text(
+                                      '${(dat[(dat.keys).elementAt(index)]! * 100 / totalAmount).round()}%',
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(
-                                  width: 10,
-                                ),
-                                Text(cat
-                                    .where((c) =>
-                                        c.id == (dat.keys).elementAt(index))
-                                    .first
-                                    .description),
-                              ],
-                            ),
-                            // Text("₹ ${data[index].amount.round()}")
-                            Text("₹ ${dat[(dat.keys).elementAt(index)]}")
-                          ],
+                                  const SizedBox(
+                                    width: 10,
+                                  ),
+                                  Text(cat
+                                      .where((c) =>
+                                          c.id == (dat.keys).elementAt(index))
+                                      .first
+                                      .description),
+                                ],
+                              ),
+                              // Text("₹ ${data[index].amount.round()}")
+                              Text("₹ ${dat[(dat.keys).elementAt(index)]}")
+                            ],
+                          ),
                         ),
                       )),
                   itemCount: dat.length,

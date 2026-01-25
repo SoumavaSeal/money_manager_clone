@@ -206,14 +206,13 @@ class DatabaseServices {
 
   void updateAccountData(String columnName, String value, String id) async {
     final db = await database;
-    db.update(accountsTable, {'$columnName': value},
+    db.update(accountsTable, {columnName: value},
         where: 'id = ?', whereArgs: [id]);
   }
 
   void updateData(
       String tableName, String id, Map<String, Object?> value) async {
     final db = await database;
-    print(id);
     db.update(tableName, value, where: 'id = ?', whereArgs: [id]);
   }
 }
