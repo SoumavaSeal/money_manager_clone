@@ -20,7 +20,7 @@ class Themes {
         floatingActionButtonTheme: const FloatingActionButtonThemeData(
             backgroundColor: primaryColor
         ),
-        tabBarTheme: const TabBarTheme(
+        tabBarTheme: const TabBarThemeData(
             indicatorColor: primaryTextColor,
             indicatorSize: TabBarIndicatorSize.tab,
             unselectedLabelStyle: TextStyle(
