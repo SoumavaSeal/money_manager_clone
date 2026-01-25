@@ -43,6 +43,9 @@ class StatDetails extends StatelessWidget {
             for (Transactions d in data) {
               int catID = d.categoryId;
               int parentID = cat.where((c) => c.id == catID).first.parentId;
+              parentID = (parentID == 0)
+                  ? catID
+                  : parentID; // When there is no parent then this is the root node
               dat[parentID] = (dat[parentID] ?? 0) + d.amount;
             }
           }
