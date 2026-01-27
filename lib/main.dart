@@ -21,10 +21,9 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Money Manager',
       theme: Themes().lightTheme,
-      home: Container(
-          child: const HomePage(
+      home: const HomePage(
         initialIndex: 0,
-      )),
+      ),
     );
   }
 }

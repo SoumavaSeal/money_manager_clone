@@ -4,7 +4,6 @@ import 'package:money_manager_clone/models/categories.dart';
 import 'package:money_manager_clone/models/date_controller.dart';
 import 'package:money_manager_clone/models/transaction.dart';
 import 'package:money_manager_clone/ui/theme.dart';
-import 'package:path/path.dart';
 
 class StatDetailsPage extends StatefulWidget {
   final List<Transactions> data;

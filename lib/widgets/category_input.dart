@@ -46,7 +46,6 @@ class _CategoryInputState extends State<CategoryInput> {
                 .toList();
             subCatList =
                 snapshot.data!.where((e) => e.parentId == curCat).toList();
-            ;
           }
 
           return Column(
