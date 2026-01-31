@@ -189,6 +189,8 @@ class DatabaseServices {
           e["description"] as String);
     }).toList();
 
+    trxn.sort((a, b) => b.date.compareTo(a.date));
+
     return trxn;
   }
 
