@@ -90,7 +90,18 @@ class StatDetails extends StatelessWidget {
                         onTap: () =>
                             Navigator.of(context).push(MaterialPageRoute(
                                 builder: (context) => StatDetailsPage(
-                                      data: data,
+                                      data: data.where((d) {
+                                        int catId = d.categoryId;
+                                        int parentId = cat
+                                            .where((c) => c.id == catId)
+                                            .first
+                                            .parentId;
+                                        parentId =
+                                            parentId == 0 ? catId : parentId;
+
+                                        return parentId ==
+                                            dat.keys.elementAt(index);
+                                      }).toList(),
                                       selectedNode: cat
                                           .where((c) =>
                                               c.id == dat.keys.elementAt(index))

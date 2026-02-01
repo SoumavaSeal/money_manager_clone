@@ -1,9 +1,12 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:money_manager_clone/models/categories.dart';
 import 'package:money_manager_clone/models/date_controller.dart';
 import 'package:money_manager_clone/models/transaction.dart';
 import 'package:money_manager_clone/ui/theme.dart';
+import 'package:money_manager_clone/widgets/daily_tran_list.dart';
+import 'package:money_manager_clone/widgets/tran_list.dart';
 
 class StatDetailsPage extends StatefulWidget {
   final List<Transactions> data;
@@ -38,19 +41,26 @@ class _StatDetailPageState extends State<StatDetailsPage> {
     double totalBalance = 0;
     Map<int, double> dat = {};
 
-    List<Transactions> selData = widget.data.where((d) {
-      int curNode = d.categoryId;
-      int parentNode =
-          widget.allCategories.where((c) => c.id == curNode).first.parentId;
+    // List<Transactions> selData = widget.data.where((d) {
+    //   int curNode = d.categoryId;
+    //   int parentNode =
+    //       widget.allCategories.where((c) => c.id == curNode).first.parentId;
 
-      parentNode = parentNode == 0 ? curNode : parentNode;
-      return parentNode == widget.selectedNode.id;
-    }).toList();
+    //   parentNode = parentNode == 0 ? curNode : parentNode;
+    //   return parentNode == widget.selectedNode.id;
+    // }).toList();
+
+    // print(widget.selectedNode.description);
+
+    List<Transactions> selData = widget.data;
 
     for (Transactions t in selData) {
       totalBalance += t.amount;
       dat[t.categoryId] = (dat[t.categoryId] ?? 0) + t.amount;
     }
+
+    dat[-1] = totalBalance;
+    widget.allCategories.add(Categories(-1, 0, 0, "All"));
 
     return Scaffold(
       body: SafeArea(
@@ -157,61 +167,59 @@ class _StatDetailPageState extends State<StatDetailsPage> {
               color: Colors.grey,
             ),
 
-            Expanded(
-              child: ListView.separated(
-                itemCount: dat.length,
-                separatorBuilder: (context, index) {
-                  return Container(
-                    margin: EdgeInsets.only(left: 10, right: 10),
-                    child: const Divider(
-                      thickness: 1,
-                      color: Colors.grey,
-                    ),
-                  );
-                },
-                itemBuilder: (context, index) {
-                  return Container(
-                    height: 30,
-                    margin: EdgeInsets.only(left: 10, right: 10),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            widget.allCategories
-                                .where((c) => c.id == dat.keys.elementAt(index))
-                                .first
-                                .description,
-                            style: TextStyle(fontSize: 14),
-                          ),
+            ListView.separated(
+              shrinkWrap: true,
+              itemCount: dat.length,
+              separatorBuilder: (context, index) {
+                return Container(
+                  margin: EdgeInsets.only(left: 10, right: 10),
+                  child: const Divider(
+                    thickness: 1,
+                    color: Colors.grey,
+                  ),
+                );
+              },
+              itemBuilder: (context, index) {
+                return Container(
+                  height: 30,
+                  margin: EdgeInsets.only(left: 10, right: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        flex: 2,
+                        child: Text(
+                          widget.allCategories
+                              .where((c) => c.id == dat.keys.elementAt(index))
+                              .first
+                              .description,
+                          style: TextStyle(fontSize: 14),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            "${(dat[dat.keys.elementAt(index)]! / totalBalance * 100).toStringAsFixed(2)}%",
-                            style: TextStyle(fontSize: 14),
-                          ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          "${(dat[dat.keys.elementAt(index)]! / totalBalance * 100).toStringAsFixed(2)}%",
+                          style: TextStyle(fontSize: 14),
                         ),
-                        Expanded(
-                          flex: 1,
-                          child: Text(
-                            dat[dat.keys.elementAt(index)]!.toStringAsFixed(2),
-                            style: TextStyle(fontSize: 14),
-                            textAlign: TextAlign.end,
-                          ),
+                      ),
+                      Expanded(
+                        flex: 1,
+                        child: Text(
+                          dat[dat.keys.elementAt(index)]!.toStringAsFixed(2),
+                          style: TextStyle(fontSize: 14),
+                          textAlign: TextAlign.end,
                         ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
 
-            const Divider(
-              thickness: 1,
-              color: Colors.grey,
-            ),
-            Text("Hello")
+            // TODO: The trend Graph
+
+            // DailyTranList(date: DateTime.now())
+            Expanded(child: TranList(trans: widget.data))
           ],
         ),
       ),
