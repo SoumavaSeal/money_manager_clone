@@ -1,22 +1,29 @@
-import 'package:flutter/foundation.dart';
+import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:money_manager_clone/models/categories.dart';
 import 'package:money_manager_clone/models/date_controller.dart';
 import 'package:money_manager_clone/models/transaction.dart';
+import 'package:money_manager_clone/services/database_services.dart';
 import 'package:money_manager_clone/ui/theme.dart';
-import 'package:money_manager_clone/widgets/daily_tran_list.dart';
 import 'package:money_manager_clone/widgets/tran_list.dart';
+
+/*
+    I want the selectedNode details and need to fetch all the transactions for the last
+    five motnhs for the selectedNode
+*/
 
 class StatDetailsPage extends StatefulWidget {
   final List<Transactions> data;
   final Categories selectedNode;
+  final double initialBalance;
   final List<Categories> allCategories;
 
   const StatDetailsPage(
       {super.key,
       required this.data,
       required this.selectedNode,
+      required this.initialBalance,
       required this.allCategories});
 
   @override
@@ -27,6 +34,7 @@ class StatDetailsPage extends StatefulWidget {
 
 class _StatDetailPageState extends State<StatDetailsPage> {
   DateTime date = DateTime.now();
+  int curNode = -1;
   final DateController _dateController = DateController();
 
   @override
@@ -61,6 +69,8 @@ class _StatDetailPageState extends State<StatDetailsPage> {
 
     dat[-1] = totalBalance;
     widget.allCategories.add(Categories(-1, 0, 0, "All"));
+
+    final DatabaseServices dbservice = DatabaseServices.dbInstance;
 
     return Scaffold(
       body: SafeArea(
@@ -139,87 +149,193 @@ class _StatDetailPageState extends State<StatDetailsPage> {
                   ],
                 )),
 
-            // Display Total Balance
-            Container(
-              width: double.infinity,
-              margin: EdgeInsets.only(left: 15, top: 10),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    "Total Balance",
-                    style: TextStyle(fontSize: 12),
-                  ),
-                  Text(
-                    "₹ $totalBalance",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
+            Expanded(
+              child: FutureBuilder(
+                  future: dbservice.getTransactions(),
+                  builder: (context, snapshot) {
+                    // if snapshot has no data
+                    if (snapshot.hasData == false) {
+                      return const Center(
+                        child: Text("No Data"),
+                      );
+                    }
 
-            const SizedBox(
-              height: 10,
-            ),
+                    List<Transactions> allTrxn = [];
+                    List<Transactions> relevantTrxn = [];
+                    List<Transactions> selMonTrxn = [];
+                    Map<int, double> groupCategories = {};
+                    Map<String, double> groupPeriods = {};
+                    double allBalance = 0;
+                    double totalBalance = 0;
+                    final spots = <FlSpot>[];
 
-            const Divider(
-              thickness: 1,
-              color: Colors.grey,
-            ),
+                    // Snapshot has valid data
+                    if (snapshot.hasData == true &&
+                        snapshot.data.toString() != "[]") {
+                      allTrxn = snapshot.data!.where((t) {
+                        int curCatId = t.categoryId;
+                        int parentId = widget.allCategories
+                            .where((c) => c.id == curCatId)
+                            .first
+                            .parentId;
 
-            ListView.separated(
-              shrinkWrap: true,
-              itemCount: dat.length,
-              separatorBuilder: (context, index) {
-                return Container(
-                  margin: EdgeInsets.only(left: 10, right: 10),
-                  child: const Divider(
-                    thickness: 1,
-                    color: Colors.grey,
-                  ),
-                );
-              },
-              itemBuilder: (context, index) {
-                return Container(
-                  height: 30,
-                  margin: EdgeInsets.only(left: 10, right: 10),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          widget.allCategories
-                              .where((c) => c.id == dat.keys.elementAt(index))
-                              .first
-                              .description,
-                          style: TextStyle(fontSize: 14),
+                        parentId = (parentId == 0) ? curCatId : parentId;
+
+                        return parentId == widget.selectedNode.id;
+                      }).toList();
+
+                      // selectedNode transactions
+                      relevantTrxn = allTrxn.where((t) {
+                        if (curNode == -1) return true;
+
+                        return t.categoryId == curNode;
+                      }).toList();
+
+                      // Aggregate in period level
+                      for (Transactions t in relevantTrxn) {
+                        String key =
+                            "${t.date.year}-${t.date.month.toString().padLeft(2, '0')}";
+
+                        groupPeriods[key] = (groupPeriods[key] ?? 0) + t.amount;
+                      }
+
+                      // filter out for current month
+                      selMonTrxn = allTrxn
+                          .where((t) =>
+                              t.date.month == date.month &&
+                              t.date.year == date.year)
+                          .toList();
+
+                      groupCategories = {-1: totalBalance};
+
+                      // Aggregate at sub categories level
+                      for (Transactions t in selMonTrxn) {
+                        totalBalance += t.amount;
+                        groupCategories[t.categoryId] =
+                            groupCategories[t.categoryId] ?? 0.0 + t.amount;
+                      }
+
+                      // Prepare data for trend Chart
+                      int ind = 0;
+
+                      for (var entry in groupPeriods.entries) {
+                        spots.add(FlSpot(ind.toDouble(), entry.value));
+                        ind++;
+                      }
+
+                      groupCategories[-1] = totalBalance;
+
+                      allBalance = groupCategories[curNode] ?? 0;
+                    }
+
+                    return Column(
+                      children: [
+                        // Display Total Balance
+                        Container(
+                          width: double.infinity,
+                          margin: EdgeInsets.only(left: 15, top: 10),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                "Total Balance",
+                                style: TextStyle(fontSize: 12),
+                              ),
+                              Text(
+                                "₹ $allBalance",
+                                style: TextStyle(
+                                    fontSize: 18, fontWeight: FontWeight.bold),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          "${(dat[dat.keys.elementAt(index)]! / totalBalance * 100).toStringAsFixed(2)}%",
-                          style: TextStyle(fontSize: 14),
+
+                        const SizedBox(
+                          height: 10,
                         ),
-                      ),
-                      Expanded(
-                        flex: 1,
-                        child: Text(
-                          dat[dat.keys.elementAt(index)]!.toStringAsFixed(2),
-                          style: TextStyle(fontSize: 14),
-                          textAlign: TextAlign.end,
+
+                        const Divider(
+                          thickness: 1,
+                          color: Colors.grey,
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              },
+
+                        ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: groupCategories.length,
+                          separatorBuilder: (context, index) {
+                            return Container(
+                              margin: EdgeInsets.only(left: 10, right: 10),
+                              child: const Divider(
+                                thickness: 1,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
+                          itemBuilder: (context, index) {
+                            return Container(
+                              height: 30,
+                              margin: EdgeInsets.only(left: 10, right: 10),
+                              child: GestureDetector(
+                                onTap: () {
+                                  setState(() {
+                                    curNode =
+                                        groupCategories.keys.elementAt(index);
+                                  });
+                                },
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      flex: 2,
+                                      child: Text(
+                                        widget.allCategories
+                                            .where((c) =>
+                                                c.id ==
+                                                groupCategories.keys
+                                                    .elementAt(index))
+                                            .first
+                                            .description,
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        "${(groupCategories[groupCategories.keys.elementAt(index)]! / totalBalance * 100).toStringAsFixed(2)}%",
+                                        style: TextStyle(fontSize: 14),
+                                      ),
+                                    ),
+                                    Expanded(
+                                      flex: 1,
+                                      child: Text(
+                                        groupCategories[groupCategories.keys
+                                                .elementAt(index)]!
+                                            .toStringAsFixed(2),
+                                        style: TextStyle(fontSize: 14),
+                                        textAlign: TextAlign.end,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+
+                        const Divider(
+                          thickness: 2,
+                        ),
+
+                        SizedBox(
+                          height: 260,
+                          child: LineChart(LineChartData(
+                              lineBarsData: [LineChartBarData(spots: spots)])),
+                        ),
+
+                        Expanded(child: TranList(trans: relevantTrxn))
+                      ],
+                    );
+                  }),
             ),
-
-            // TODO: The trend Graph
-
-            // DailyTranList(date: DateTime.now())
-            Expanded(child: TranList(trans: widget.data))
           ],
         ),
       ),

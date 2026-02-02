@@ -107,6 +107,8 @@ class StatDetails extends StatelessWidget {
                                               c.id == dat.keys.elementAt(index))
                                           .first,
                                       allCategories: cat,
+                                      initialBalance:
+                                          dat[dat.keys.elementAt(index)] ?? 0,
                                     ))),
                         child: Container(
                           // height: 25,
