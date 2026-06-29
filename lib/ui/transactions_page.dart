@@ -61,7 +61,7 @@ class _TransactionPageState extends State<TransactionsPage> {
                   ),
                   Container(
                     color: Themes.primaryColor,
-                    height: 30,
+                    height: 50,
                     child: const TabBar(
                       tabs: [
                         Tab(

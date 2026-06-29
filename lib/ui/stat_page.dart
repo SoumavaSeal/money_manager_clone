@@ -3,6 +3,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:money_manager_clone/models/date_controller.dart';
 import 'package:money_manager_clone/models/transaction.dart';
 import 'package:money_manager_clone/services/database_services.dart';
+import 'package:money_manager_clone/widgets/header.dart';
 import 'package:money_manager_clone/widgets/stat_details.dart';
 
 class StatPage extends StatefulWidget {
@@ -21,6 +22,12 @@ class _StatPageState extends State<StatPage> {
     _dateController.setDate(date);
     date = _dateController.getDate();
     super.initState();
+  }
+
+  void refresh(DateTime selDate) {
+    setState(() {
+      date = selDate;
+    });
   }
 
   @override
@@ -49,7 +56,7 @@ class _StatPageState extends State<StatPage> {
                         e.type == 0)
                     .toList();
 
-                selMonIncome.sort((i1,i2) => i2.amount.compareTo(i1.amount));
+                selMonIncome.sort((i1, i2) => i2.amount.compareTo(i1.amount));
 
                 selMonExpense = snapshot.data!
                     .where((e) =>
@@ -57,8 +64,8 @@ class _StatPageState extends State<StatPage> {
                         e.date.year == date.year &&
                         e.type == 1)
                     .toList();
-                
-                selMonExpense.sort((i1,i2) => i2.amount.compareTo(i1.amount));
+
+                selMonExpense.sort((i1, i2) => i2.amount.compareTo(i1.amount));
               }
 
               double totalIncome = 0.00;
@@ -75,62 +82,10 @@ class _StatPageState extends State<StatPage> {
               return Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.only(left: 10, right: 10),
                     color: Theme.of(context).primaryColor,
                     child: Column(
                       children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10, vertical: 0),
-                                  child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _dateController.prevMonth();
-                                          date = _dateController.getDate();
-                                        });
-                                      },
-                                      child: FaIcon(
-                                        FontAwesomeIcons.angleLeft,
-                                        size: 12,
-                                        color: Theme.of(context)
-                                            .secondaryHeaderColor,
-                                      )),
-                                ),
-                                Text(
-                                  "${_dateController.months[date.month - 1]} ${date.year}",
-                                  style: const TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                Container(
-                                  margin: const EdgeInsets.only(right: 5),
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 10),
-                                  child: GestureDetector(
-                                      onTap: () {
-                                        setState(() {
-                                          _dateController.nextMonth();
-                                          date = _dateController.getDate();
-                                        });
-                                      },
-                                      child: FaIcon(
-                                        FontAwesomeIcons.angleRight,
-                                        size: 12,
-                                        color: Theme.of(context)
-                                            .secondaryHeaderColor,
-                                      )),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
+                        Header(date: date, updateParent: refresh),
                         TabBar(tabs: [
                           Tab(child: Text("Income $totalIncome")),
                           Tab(
