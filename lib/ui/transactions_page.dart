@@ -63,6 +63,7 @@ class _TransactionPageState extends State<TransactionsPage> {
                     color: Themes.primaryColor,
                     height: 50,
                     child: const TabBar(
+                      textScaler: TextScaler.linear(0.95),
                       tabs: [
                         Tab(
                           text: "Daily",

@@ -44,9 +44,14 @@ class _StatPageState extends State<StatPage> {
               List<Transactions> selMonIncome = [];
               List<Transactions> selMonExpense = [];
 
+              if (snapshot.hasData == false) {
+                return CircularProgressIndicator();
+              }
+
               if (snapshot.hasData == true) {
                 selMonTrxn = snapshot.data!
-                    .where((e) => e.date.month == date.month)
+                    .where((e) => (e.date.month == date.month &&
+                        e.date.year == date.year))
                     .toList();
 
                 selMonIncome = snapshot.data!
@@ -97,14 +102,22 @@ class _StatPageState extends State<StatPage> {
                   ),
                   Expanded(
                     child: TabBarView(children: [
-                      StatDetails(
-                        data: selMonIncome,
-                        totalAmount: totalIncome,
-                      ),
-                      StatDetails(
-                        data: selMonExpense,
-                        totalAmount: totalExpense,
-                      ),
+                      (selMonIncome.isEmpty)
+                          ? const Center(
+                              child: Text("No data"),
+                            )
+                          : StatDetails(
+                              data: selMonIncome,
+                              totalAmount: totalIncome,
+                            ),
+                      (selMonExpense.isEmpty)
+                          ? const Center(
+                              child: Text("No data"),
+                            )
+                          : StatDetails(
+                              data: selMonExpense,
+                              totalAmount: totalExpense,
+                            ),
                     ]),
                   )
                 ],
